@@ -699,7 +699,7 @@ export class Renderer {
         M.rotateY(m, m, -Math.PI / 2 + 0.35 - s1 * 0.4);
         M.rotateZ(m, m, 0.45 - sq * 0.8);
         M.rotateX(m, m, 0);
-        M.scale(m, m, 0.68, 0.68, 0.68);
+        M.scale(m, m, 0.56, 0.56, 0.56);
       }
       this.drawModel(model, m, h.light);
     } else {
