@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#16141c">
+<meta name="description" content="MCweb : un jeu de construction en blocs façon Minecraft, entièrement jouable dans le navigateur.">
+<title>MCweb</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=VT323&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!--APP-START-->
+<div id="app">
+  <canvas id="game-canvas" aria-label="Vue du monde"></canvas>
+  <div id="overlay-fluid" aria-hidden="true"></div>
+  <div id="overlay-hurt" aria-hidden="true"></div>
+
+  <div id="hud" hidden>
+    <div id="crosshair" aria-hidden="true"></div>
+    <pre id="debug" hidden></pre>
+    <div id="fps" hidden></div>
+    <div id="chat-log" aria-live="polite"></div>
+    <div id="item-name" aria-live="polite"></div>
+    <div id="hud-bottom">
+      <div id="status">
+        <div id="hearts" class="icon-row" aria-label="Santé"></div>
+        <div id="hunger" class="icon-row reverse" aria-label="Faim"></div>
+      </div>
+      <div id="air" class="icon-row reverse" aria-label="Air"></div>
+      <div id="hotbar" role="toolbar" aria-label="Barre d'objets"></div>
+    </div>
+  </div>
+
+  <div id="touch-controls" hidden>
+    <div id="joystick" aria-label="Déplacement"><div id="joystick-knob"></div></div>
+    <button id="t-jump" class="t-btn" type="button" aria-label="Sauter">▲</button>
+    <button id="t-sneak" class="t-btn" type="button" aria-label="S'accroupir ou descendre">▼</button>
+    <div id="t-top">
+      <button id="t-pause" class="t-btn small" type="button" aria-label="Pause">❚❚</button>
+      <button id="t-chat" class="t-btn small" type="button" aria-label="Discussion">/</button>
+      <button id="t-drop" class="t-btn small" type="button" aria-label="Jeter l'objet">Jeter</button>
+      <button id="t-inv" class="t-btn small" type="button" aria-label="Inventaire">Sac</button>
+    </div>
+  </div>
+
+  <section id="screen-title" class="screen title-screen" hidden>
+    <div class="title-wrap">
+      <h1 class="logo" id="logo">MCweb</h1>
+      <p class="splash" id="splash">Aussi en français !</p>
+      <div class="menu-buttons">
+        <button class="btn" type="button" data-action="worlds">Solo</button>
+        <button class="btn" type="button" data-action="options">Options</button>
+        <button class="btn" type="button" data-action="help">Commandes</button>
+      </div>
+    </div>
+    <p class="footer-note">Textures, sons et monde générés par le code · sauvegarde dans votre navigateur</p>
+  </section>
+
+  <section id="screen-worlds" class="screen dirt" hidden>
+    <h2>Choisir un monde</h2>
+    <div id="world-list" class="world-list"></div>
+    <div class="row">
+      <button class="btn" type="button" data-action="create">Nouveau monde</button>
+      <button class="btn" type="button" data-action="title">Retour</button>
+    </div>
+  </section>
+
+  <section id="screen-create" class="screen dirt" hidden>
+    <h2>Nouveau monde</h2>
+    <form id="create-form" class="form" autocomplete="off">
+      <label for="world-name">Nom du monde</label>
+      <input id="world-name" name="world-name" maxlength="32" value="Mon monde">
+      <label for="world-seed">Graine du générateur</label>
+      <input id="world-seed" name="world-seed" maxlength="40" placeholder="Vide = graine aléatoire">
+      <fieldset class="modes">
+        <legend>Mode de jeu</legend>
+        <label class="mode"><input type="radio" name="mode" id="mode-survival" value="survival" checked><span><b>Survie</b>Récoltez, fabriquez vos outils, mangez et survivez aux nuits.</span></label>
+        <label class="mode"><input type="radio" name="mode" id="mode-creative" value="creative"><span><b>Créatif</b>Blocs illimités, vol (double saut) et aucun danger.</span></label>
+      </fieldset>
+      <div class="row">
+        <button class="btn" type="submit">Créer le monde</button>
+        <button class="btn" type="button" data-action="worlds">Annuler</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="screen-options" class="screen dirt" hidden>
+    <h2>Options</h2>
+    <div id="options-list" class="options-list"></div>
+    <div class="row">
+      <button class="btn" type="button" data-action="options-done">Terminé</button>
+    </div>
+  </section>
+
+  <section id="screen-help" class="screen dirt" hidden>
+    <h2>Commandes</h2>
+    <div class="help">
+      <dl>
+        <dt>Z Q S D <small>(ou W A S D)</small></dt><dd>Se déplacer</dd>
+        <dt>Souris</dt><dd>Regarder autour</dd>
+        <dt>Clic gauche</dt><dd>Miner / attaquer (maintenir)</dd>
+        <dt>Clic droit</dt><dd>Poser un bloc, utiliser, manger (maintenir)</dd>
+        <dt>Clic molette</dt><dd>Choisir le bloc visé (créatif)</dd>
+        <dt>Espace</dt><dd>Sauter, nager · double appui : voler (créatif)</dd>
+        <dt>Maj</dt><dd>S'accroupir · descendre en vol</dd>
+        <dt>Ctrl · double Z</dt><dd>Courir</dd>
+        <dt>1 – 9 · molette</dt><dd>Choisir un objet de la barre</dd>
+        <dt>E</dt><dd>Inventaire et artisanat</dd>
+        <dt>A <small>(ou Q)</small></dt><dd>Jeter l'objet tenu</dd>
+        <dt>T · /</dt><dd>Discussion et commandes (/help)</dd>
+        <dt>F3</dt><dd>Informations de débogage</dd>
+        <dt>F1</dt><dd>Masquer l'interface</dd>
+        <dt>Échap</dt><dd>Pause</dd>
+      </dl>
+      <p>Pour bien démarrer en survie : coupez un arbre, transformez les bûches en planches, fabriquez une table d'artisanat puis une pioche en bois. Le charbon et les bâtons donnent des torches pour la nuit.</p>
+    </div>
+    <div class="row">
+      <button class="btn" type="button" data-action="help-done">Terminé</button>
+    </div>
+  </section>
+
+  <section id="screen-pause" class="screen dim" hidden>
+    <h2>Jeu en pause</h2>
+    <div class="menu-buttons">
+      <button class="btn" type="button" data-action="resume">Reprendre la partie</button>
+      <button class="btn" type="button" data-action="options">Options</button>
+      <button class="btn" type="button" data-action="help">Commandes</button>
+      <button class="btn" type="button" data-action="quit">Sauvegarder et quitter</button>
+    </div>
+  </section>
+
+  <section id="screen-death" class="screen death" hidden>
+    <h2>Vous êtes mort !</h2>
+    <p id="death-message"></p>
+    <div class="menu-buttons">
+      <button class="btn" type="button" data-action="respawn">Réapparaître</button>
+      <button class="btn" type="button" data-action="quit">Écran titre</button>
+    </div>
+  </section>
+
+  <section id="screen-loading" class="screen dirt" hidden>
+    <h2 id="loading-text">Chargement…</h2>
+    <div class="progress"><div id="loading-bar"></div></div>
+  </section>
+
+  <section id="screen-click" class="screen clear" hidden>
+    <button class="btn" type="button" data-action="lock">Cliquez pour jouer</button>
+  </section>
+
+  <section id="screen-container" class="screen dim" hidden>
+    <div id="container-panel" class="panel"></div>
+  </section>
+
+  <section id="screen-chat" hidden>
+    <form id="chat-form" autocomplete="off">
+      <label for="chat-input" class="visually-hidden">Message ou commande</label>
+      <input id="chat-input" name="chat-input" maxlength="200" spellcheck="false">
+    </form>
+  </section>
+
+  <section id="screen-error" class="screen dirt" hidden>
+    <h2>Impossible de lancer le jeu</h2>
+    <p id="error-text"></p>
+  </section>
+
+  <div id="cursor-stack" aria-hidden="true"></div>
+  <div id="tooltip" role="tooltip"></div>
+</div>
+<!--APP-END-->
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
