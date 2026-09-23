@@ -229,6 +229,7 @@ html, body {
 #overlay-fluid.water { opacity: 1; background: rgba(20, 60, 170, 0.28); }
 #overlay-fluid.lava { opacity: 1; background: rgba(255, 90, 0, 0.6); }
 #overlay-hurt { background: radial-gradient(ellipse at center, transparent 45%, rgba(190, 0, 0, 0.55)); }
+#overlay-sleep { position: absolute; inset: 0; pointer-events: none; z-index: 6; background: #05040a; opacity: 0; }
 #overlay-hurt.on { opacity: 1; transition: none; }
 
 /* ------------------------------------------------------------ inventaire */

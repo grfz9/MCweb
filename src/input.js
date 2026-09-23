@@ -13,6 +13,8 @@ export class Input {
     this.wheel = 0;
     this.locked = false;
     this.lockFailed = false;
+    this.lockErrors = 0;
+    this.onLockFail = null;
     this.enabled = false; // vrai quand le jeu capte les commandes
     this.onLockChange = null;
     this.onKey = null; // (code, event) -> true si géré par l'interface
@@ -37,8 +39,11 @@ export class Input {
     window.addEventListener('mousemove', (e) => {
       if (!this.enabled) return;
       if (this.locked || (this.lockFailed && (e.buttons & 4 || e.target === canvas))) {
-        this.dx += e.movementX || 0;
-        this.dy += e.movementY || 0;
+        const mx = e.movementX || 0, my = e.movementY || 0;
+        // Certains navigateurs envoient un saut énorme juste après le verrouillage : on l'ignore.
+        if (Math.abs(mx) > 350 || Math.abs(my) > 350) return;
+        this.dx += mx;
+        this.dy += my;
       }
     });
     canvas.addEventListener('wheel', (e) => {
@@ -49,10 +54,11 @@ export class Input {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === canvas;
+      if (this.locked) this.lockErrors = 0;
       if (!this.locked) this.mouse = [false, false, false];
       if (this.onLockChange) this.onLockChange(this.locked);
     });
-    document.addEventListener('pointerlockerror', () => { this.lockFailed = true; });
+    document.addEventListener('pointerlockerror', () => this.lockError());
   }
 
   keyDown(e) {
@@ -77,13 +83,22 @@ export class Input {
   }
 
   requestLock() {
-    if (this.locked) return;
+    if (this.locked || this.lockFailed) return;
+    if (!this.canvas.requestPointerLock) { this.lockFailed = true; return; }
     try {
       const r = this.canvas.requestPointerLock();
-      if (r && r.catch) r.catch(() => { this.lockFailed = true; });
+      if (r && r.catch) r.catch(() => this.lockError());
     } catch {
-      this.lockFailed = true;
+      this.lockError();
     }
+  }
+
+  // Un échec ponctuel (clic trop rapide après Échap) redemande un clic ; après plusieurs échecs
+  // (page intégrée sans droit de verrouillage), on passe en mode « souris libre ».
+  lockError() {
+    this.lockErrors++;
+    if (this.lockErrors >= 3) this.lockFailed = true;
+    else if (this.onLockFail) this.onLockFail();
   }
 
   exitLock() {

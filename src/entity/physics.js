@@ -1,5 +1,5 @@
 // Collisions boîte englobante contre les blocs solides.
-import { SOLID, IS_LIQUID, B } from '../blocks.js';
+import { SOLID, IS_LIQUID, BOX_HEIGHT, B } from '../blocks.js';
 
 const EPS = 1e-7;
 
@@ -17,30 +17,30 @@ export function moveEntity(world, e, dx, dy, dz) {
     for (let z = z0; z <= z1; z++)
       for (let x = x0; x <= x1; x++) {
         const id = world.getBlock(x, y, z);
-        if (SOLID[id]) boxes.push(x, y, z);
+        if (SOLID[id]) boxes.push(x, y, z, BOX_HEIGHT[id]);
       }
 
   const odx = dx, ody = dy, odz = dz;
   // Axe Y
-  for (let i = 0; i < boxes.length; i += 3) {
-    const bx = boxes[i], by = boxes[i + 1], bz = boxes[i + 2];
+  for (let i = 0; i < boxes.length; i += 4) {
+    const bx = boxes[i], by = boxes[i + 1], bz = boxes[i + 2], bh = boxes[i + 3];
     if (maxX <= bx + EPS || minX >= bx + 1 - EPS || maxZ <= bz + EPS || minZ >= bz + 1 - EPS) continue;
     if (dy > 0 && maxY <= by + EPS) dy = Math.min(dy, by - maxY);
-    else if (dy < 0 && minY >= by + 1 - EPS) dy = Math.max(dy, by + 1 - minY);
+    else if (dy < 0 && minY >= by + bh - EPS) dy = Math.max(dy, by + bh - minY);
   }
   minY += dy; maxY += dy;
   // Axe X
-  for (let i = 0; i < boxes.length; i += 3) {
-    const bx = boxes[i], by = boxes[i + 1], bz = boxes[i + 2];
-    if (maxY <= by + EPS || minY >= by + 1 - EPS || maxZ <= bz + EPS || minZ >= bz + 1 - EPS) continue;
+  for (let i = 0; i < boxes.length; i += 4) {
+    const bx = boxes[i], by = boxes[i + 1], bz = boxes[i + 2], bh = boxes[i + 3];
+    if (maxY <= by + EPS || minY >= by + bh - EPS || maxZ <= bz + EPS || minZ >= bz + 1 - EPS) continue;
     if (dx > 0 && maxX <= bx + EPS) dx = Math.min(dx, bx - maxX);
     else if (dx < 0 && minX >= bx + 1 - EPS) dx = Math.max(dx, bx + 1 - minX);
   }
   minX += dx; maxX += dx;
   // Axe Z
-  for (let i = 0; i < boxes.length; i += 3) {
-    const bx = boxes[i], by = boxes[i + 1], bz = boxes[i + 2];
-    if (maxY <= by + EPS || minY >= by + 1 - EPS || maxX <= bx + EPS || minX >= bx + 1 - EPS) continue;
+  for (let i = 0; i < boxes.length; i += 4) {
+    const bx = boxes[i], by = boxes[i + 1], bz = boxes[i + 2], bh = boxes[i + 3];
+    if (maxY <= by + EPS || minY >= by + bh - EPS || maxX <= bx + EPS || minX >= bx + 1 - EPS) continue;
     if (dz > 0 && maxZ <= bz + EPS) dz = Math.min(dz, bz - maxZ);
     else if (dz < 0 && minZ >= bz + 1 - EPS) dz = Math.max(dz, bz + 1 - minZ);
   }

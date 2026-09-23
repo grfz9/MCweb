@@ -200,3 +200,18 @@ test('les chunks modifiés sont sauvegardés puis rechargés à l’identique', 
   assert.equal(w2.getBlock(4, 90, 4), B.DIAMOND_BLOCK);
   assert.equal(w2.getBlockEntity(4, 90, 4).slots[0].count, 3);
 });
+
+test('les feuilles naturelles tombent quand le tronc disparaît, pas celles posées', () => {
+  const w = new World(13);
+  loadArea(w, 2);
+  flatPool(w);
+  w.setBlock(0, 100, 0, B.OAK_LOG, 0, false);
+  for (const [x, z] of [[1, 0], [-1, 0], [0, 1]]) w.setBlock(x, 100, z, B.OAK_LEAVES, 0, false);
+  w.setBlock(0, 100, -1, B.OAK_LEAVES, 1, false); // posée par le joueur
+  w.setBlock(0, 100, 0, B.AIR);
+  for (let i = 0; i < 250; i++) w.update();
+  assert.equal(w.getBlock(1, 100, 0), B.AIR);
+  assert.equal(w.getBlock(-1, 100, 0), B.AIR);
+  assert.equal(w.getBlock(0, 100, 1), B.AIR);
+  assert.equal(w.getBlock(0, 100, -1), B.OAK_LEAVES);
+});

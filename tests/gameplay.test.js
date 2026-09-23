@@ -89,3 +89,16 @@ test('les textures et le maillage se construisent', () => {
   assert.ok(mesh.opaqueQuads > 100);
   assert.equal(mesh.opaque.byteLength, mesh.opaqueQuads * 4 * 16);
 });
+
+test('le lit se fabrique et on se tient dessus à 9/16 de bloc', () => {
+  const W = B.WOOL + 3, p = B.OAK_PLANKS;
+  assert.equal(findRecipe([W, B.WOOL, W, p, p, B.BIRCH_PLANKS, _, _, _], 3, 3).id, B.BED);
+  const w = new World(22);
+  for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) w.loadChunk(dx, dz);
+  for (let y = 100; y < 104; y++) w.setBlock(4, y, 4, B.AIR, 0, false);
+  w.setBlock(4, 99, 4, B.STONE, 0, false);
+  w.setBlock(4, 100, 4, B.BED, 4, false);
+  const e = { x: 4.5, y: 102, z: 4.5, w: 0.3, h: 1.8, vx: 0, vy: 0, vz: 0 };
+  for (let i = 0; i < 120; i++) { e.vy -= 28 / 60; moveEntity(w, e, 0, e.vy / 60, 0); }
+  assert.ok(Math.abs(e.y - (100 + 9 / 16)) < 1e-6, `y=${e.y}`);
+});

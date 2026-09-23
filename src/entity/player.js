@@ -1,7 +1,7 @@
 // Le joueur : déplacements, nage, vol, santé, faim, air et inventaire.
 import { moveEntity, entityLiquid, boxCollides } from './physics.js';
 import { Inventory } from '../inventory.js';
-import { B, SOLID, blocks } from '../blocks.js';
+import { B, SOLID, OPAQUE, blocks } from '../blocks.js';
 
 const GRAVITY = 28;
 const WALK = 4.317, SPRINT = 5.612, SNEAK = 1.31, FLY = 10.9, FLY_SPRINT = 21.6;
@@ -170,6 +170,10 @@ export class Player {
       this.air--;
       if (this.air <= -20) { this.air = 0; this.damage(2, null, 'drown'); }
     } else this.air = Math.min(300, this.air + 4);
+
+    // Tête coincée dans un bloc plein (sable tombé, etc.)
+    const head = world.getBlock(Math.floor(this.x), Math.floor(this.eyeY), Math.floor(this.z));
+    if (!this.creative && OPAQUE[head] && SOLID[head]) this.damage(1, null, 'suffocate');
 
     if (this.inLava && !this.creative) {
       this.lavaTimer--;

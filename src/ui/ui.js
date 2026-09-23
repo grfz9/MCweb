@@ -495,6 +495,10 @@ export class UI {
     if (ov.className !== fluid) ov.className = fluid;
   }
 
+  setSleep(v) {
+    $('overlay-sleep').style.opacity = v;
+  }
+
   flashHurt() {
     const el = $('overlay-hurt');
     el.classList.add('on');

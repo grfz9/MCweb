@@ -4,7 +4,7 @@ import { Generator, placeTree, TREE } from './generator.js';
 import { initChunkLight, updateLight } from './lighting.js';
 import { chunkKey, CHUNK_VOLUME, WORLD_HEIGHT, FACE_DIRS } from '../constants.js';
 import {
-  B, blocks, SOLID, OPAQUE, IS_LIQUID, REPLACEABLE, isSupporting,
+  B, blocks, SOLID, OPAQUE, IS_LIQUID, REPLACEABLE, LEAVES, LOGS, isSupporting,
 } from '../blocks.js';
 import { mulberry32 } from '../noise.js';
 
@@ -178,6 +178,7 @@ export class World {
       const keep = (old === B.FURNACE || old === B.LIT_FURNACE) && (id === B.FURNACE || id === B.LIT_FURNACE);
       if (!keep && c.blockEntities.has(i)) c.blockEntities.delete(i);
       updateLight(this, x, y, z, old, id);
+      if (notify && LOGS.has(old)) this.scheduleLeafDecay(x, y, z);
     }
     this.markLightChanged(c, x, z);
     if (notify) this.notifyAround(x, y, z);
@@ -273,10 +274,35 @@ export class World {
     }
   }
 
+  // Après la coupe d'un tronc, les feuilles naturelles trop loin d'une bûche finissent par tomber.
+  scheduleLeafDecay(x, y, z) {
+    for (let dy = -4; dy <= 4; dy++)
+      for (let dz = -4; dz <= 4; dz++)
+        for (let dx = -4; dx <= 4; dx++) {
+          const id = this.getBlock(x + dx, y + dy, z + dz);
+          if (LEAVES.has(id) && this.getMeta(x + dx, y + dy, z + dz) === 0) this.schedule(x + dx, y + dy, z + dz, 20 + Math.floor(this.rand() * 160));
+        }
+  }
+
+  hasLogNear(x, y, z, r) {
+    for (let d = 1; d <= r; d++)
+      for (let dy = -d; dy <= d; dy++)
+        for (let dz = -d; dz <= d; dz++)
+          for (let dx = -d; dx <= d; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy), Math.abs(dz)) !== d) continue;
+            if (LOGS.has(this.getBlock(x + dx, y + dy, z + dz))) return true;
+          }
+    return false;
+  }
+
   blockTick(x, y, z) {
     const id = this.getBlock(x, y, z);
     if (id === B.AIR) return;
     const b = blocks[id];
+    if (LEAVES.has(id)) {
+      if (this.getMeta(x, y, z) === 0 && !this.hasLogNear(x, y, z, 4)) this.popBlock(x, y, z);
+      return;
+    }
     if (IS_LIQUID[id]) this.fluidTick(x, y, z, id);
     else if (b.gravity) {
       const below = this.getBlock(x, y - 1, z);

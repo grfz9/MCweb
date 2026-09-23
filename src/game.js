@@ -5,8 +5,8 @@ import { World } from './world/world.js';
 import { BIOME_NAMES } from './world/generator.js';
 import { Player } from './entity/player.js';
 import { ItemEntity, FallingBlock, PrimedTnt, Mob, Particles, PASSIVE_MOBS, MOB_TYPES } from './entity/entities.js';
-import { rayBox } from './entity/physics.js';
-import { B, blocks, SOLID, REPLACEABLE, IS_LIQUID, SHAPE } from './blocks.js';
+import { rayBox, moveEntity } from './entity/physics.js';
+import { B, blocks, SOLID, REPLACEABLE, IS_LIQUID, SHAPE, LEAVES } from './blocks.js';
 import { I, getItem, breakTime, canHarvest, attackDamage, findItemByKey, maxStack } from './items.js';
 import { smeltResult } from './crafting.js';
 import { lookVector, clamp } from './math.js';
@@ -57,10 +57,12 @@ export class Game {
     this.fpsTime = 0;
     this.urgentChunks = new Set();
     this.touchBreak = false;
+    this.sleepTimer = 0;
     this.panoYaw = 0;
     this.lastFrame = performance.now();
 
     this.input.onLockChange = (locked) => this.onLockChange(locked);
+    this.input.onLockFail = () => { if (this.state === 'playing' && this.ui) this.ui.showClickToPlay(); };
     this.applySettings();
     this.loop = this.loop.bind(this);
     requestAnimationFrame(this.loop);
@@ -172,6 +174,9 @@ export class Game {
     if (!this.touch) this.ui.showClickToPlay();
     this.saveTimer = 0;
     this.chat(`Bienvenue dans « ${meta.name} » ! Tapez /help pour la liste des commandes.`);
+    if (!meta.player && this.gamemode === GAMEMODE.SURVIVAL) {
+      this.chat('Astuce : maintenez le clic sur un arbre pour récolter du bois, puis ouvrez l’inventaire (E) pour fabriquer des planches.');
+    }
   }
 
   // Cherche un sol dégagé (pas sur un arbre ni dans l'eau) autour de (x0, z0).
@@ -335,12 +340,22 @@ export class Game {
     if (playing) this.handleKeys();
 
     // Joueur (sous-pas pour la stabilité)
-    const mv = playing ? input.movement() : { forward: 0, strafe: 0, jump: false, sneak: false, sprint: false };
+    const sleeping = this.sleepTimer > 0;
+    if (sleeping) {
+      this.sleepTimer -= dt;
+      this.ui.setSleep(Math.min(1, (2.6 - this.sleepTimer) / 1.6));
+      if (this.sleepTimer <= 0) {
+        this.dayTime = 0;
+        this.ui.setSleep(0);
+        this.chat('Bonjour ! Une nouvelle journée commence.');
+      }
+    }
+    const mv = playing && !sleeping ? input.movement() : { forward: 0, strafe: 0, jump: false, sneak: false, sprint: false };
     if (playing && input.doubleSpace && this.isCreative()) p.flying = !p.flying;
     const steps = dt > 1 / 40 ? 2 : 1;
     for (let i = 0; i < steps; i++) p.update(dt / steps, mv);
 
-    if (playing && !p.dead) this.updateInteraction(dt);
+    if (playing && !p.dead && !sleeping) this.updateInteraction(dt);
     else { this.breaking = null; this.eatTime = 0; }
 
     // Ticks du monde (20 par seconde)
@@ -355,6 +370,7 @@ export class Game {
 
     // Entités
     for (const e of this.entities) if (this.world.isLoadedAt(e.x, e.z)) e.update(dt);
+    this.pushEntities();
     this.pickupItems();
     this.entities = this.entities.filter((e) => !e.dead);
     this.particles.update(dt);
@@ -425,6 +441,7 @@ export class Game {
     }
     this.targetEntity = bestE;
     this.target = bestE ? null : hit;
+    if (this.target) this.target.height = blocks[this.target.id].height;
 
     this.useCooldown = Math.max(0, this.useCooldown - dt);
     this.attackCooldown = Math.max(0, this.attackCooldown - dt);
@@ -479,6 +496,7 @@ export class Game {
     const b = blocks[hit.id];
     if (b.interact && !p.sneaking && fresh) {
       if (b.interact === 'crafting') { this.openScreen('crafting'); this.swing(); return; }
+      if (b.interact === 'bed') { this.trySleep(hit); return; }
       if (b.interact === 'furnace' || b.interact === 'chest') {
         let be = this.world.getBlockEntity(hit.x, hit.y, hit.z);
         if (!be) {
@@ -536,6 +554,8 @@ export class Game {
       else meta = fz > 0 ? 5 : 4;
     } else if (b.axis) {
       meta = hit.face === 0 || hit.face === 1 ? 1 : hit.face === 4 || hit.face === 5 ? 2 : 0;
+    } else if (LEAVES.has(id)) {
+      meta = 1; // feuilles posées par le joueur : elles ne se décomposent pas
     } else if (b.shape === SHAPE.TORCH) {
       if (hit.face === 2 || (targetBlock.replaceable && hit.face !== 3)) meta = 0;
       else if (hit.face === 3) return false;
@@ -554,6 +574,22 @@ export class Game {
     this.playSound('place_' + b.sound, 0.8);
     this.markUrgent(x, z);
     return true;
+  }
+
+  trySleep(hit) {
+    const p = this.player;
+    p.spawn = { x: hit.x + 0.5, y: hit.y + 0.6, z: hit.z + 0.5 };
+    if (this.isDay()) { this.chat('Point d’apparition défini. Vous ne pouvez dormir que la nuit.'); return; }
+    for (const e of this.entities) {
+      if (e instanceof Mob && e.hostile && e.deathTime === 0 && Math.hypot(e.x - hit.x, e.y - hit.y, e.z - hit.z) < 8) {
+        this.chat('Vous ne pouvez pas dormir : des monstres rôdent à proximité.');
+        return;
+      }
+    }
+    p.x = hit.x + 0.5; p.z = hit.z + 0.5; p.y = hit.y + 9 / 16;
+    p.vx = p.vy = p.vz = 0;
+    this.sleepTimer = 2.6;
+    this.chat('Point d’apparition défini. Bonne nuit…');
   }
 
   mine(dt, hit, fresh) {
@@ -667,6 +703,34 @@ export class Game {
         const c = this.world.getChunk((x + dx) >> 4, (z + dz) >> 4);
         if (c) this.urgentChunks.add(c);
       }
+  }
+
+  // Les créatures ne se traversent pas et repoussent doucement le joueur.
+  pushEntities() {
+    const mobs = this.entities.filter((e) => e instanceof Mob && e.deathTime === 0);
+    const p = this.player;
+    const push = (a, b, ka, kb) => {
+      const min = (a.w + b.w) / 2;
+      const dx = b.x - a.x, dz = b.z - a.z;
+      if (Math.abs(dx) >= min || Math.abs(dz) >= min) return;
+      if (a.y >= b.y + b.h || b.y >= a.y + a.h) return;
+      const d = Math.hypot(dx, dz);
+      if (d >= min) return;
+      const nx = d > 1e-4 ? dx / d : 1, nz = d > 1e-4 ? dz / d : 0;
+      const o = Math.min(min - d, 0.3);
+      nudge(a, -nx * o * ka, -nz * o * ka);
+      nudge(b, nx * o * kb, nz * o * kb);
+    };
+    const world = this.world;
+    const nudge = (e, dx, dz) => {
+      const g = e.onGround, vx = e.vx, vz = e.vz, vy = e.vy;
+      moveEntity(world, e, dx, 0, dz);
+      e.onGround = g; e.vx = vx; e.vz = vz; e.vy = vy;
+    };
+    for (let i = 0; i < mobs.length; i++) {
+      if (!p.dead && !p.flying) push(p, mobs[i], 0.2, 0.8);
+      for (let j = i + 1; j < mobs.length; j++) push(mobs[i], mobs[j], 0.5, 0.5);
+    }
   }
 
   // ------------------------------------------------------------------ objets
@@ -886,7 +950,7 @@ export class Game {
     const p = this.player;
     const msgs = {
       fall: 'est tombé de trop haut', lava: 'a essayé de nager dans la lave', drown: 's’est noyé',
-      explosion: 'a explosé', cactus: 's’est piqué à mort', starve: 'est mort de faim', mob: 'a été tué par un monstre',
+      explosion: 'a explosé', cactus: 's’est piqué à mort', suffocate: 'a suffoqué dans un mur', starve: 'est mort de faim', mob: 'a été tué par un monstre',
       kill: 'a quitté ce monde',
     };
     const msg = 'Le joueur ' + (msgs[cause] || 'est mort');

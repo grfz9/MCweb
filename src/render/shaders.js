@@ -165,8 +165,9 @@ export const LINE_VS = `#version 300 es
 layout(location = 0) in vec3 a_pos;
 uniform mat4 u_viewProj;
 uniform vec3 u_offset;
+uniform vec3 u_scale;
 void main() {
-  gl_Position = u_viewProj * vec4(a_pos + u_offset, 1.0);
+  gl_Position = u_viewProj * vec4(a_pos * u_scale + u_offset, 1.0);
 }`;
 
 export const LINE_FS = `#version 300 es

@@ -7,6 +7,7 @@ const TAGS = {
   planks: PLANKS,
   log: [B.OAK_LOG, B.BIRCH_LOG, B.SPRUCE_LOG],
   cobble: [B.COBBLESTONE, B.MOSSY_COBBLESTONE],
+  wool: Object.values(WOOL_INDEX),
 };
 
 export const RECIPES = [];
@@ -29,6 +30,7 @@ shaped(['###', '# #', '###'], { '#': 'cobble' }, B.FURNACE);
 shaped(['###', '# #', '###'], { '#': 'planks' }, B.CHEST);
 shaped(['##', '##'], { '#': B.SAND }, B.SANDSTONE);
 shaped(['##', '##'], { '#': B.STONE }, B.STONE_BRICKS, 4);
+shaped(['WWW', 'PPP'], { W: 'wool', P: 'planks' }, B.BED);
 shaped(['GSG', 'SGS', 'GSG'], { G: I.GUNPOWDER, S: B.SAND }, B.TNT);
 shapeless([I.IRON_INGOT, I.FLINT], I.FLINT_AND_STEEL);
 shaped(['###', '###', '###'], { '#': I.COAL }, B.COAL_BLOCK);

@@ -163,6 +163,7 @@ export function buildChunkMesh(world, chunk) {
         else if (shape === SHAPE.LIQUID) liquidBlock(p, id, x, y, z);
         else if (shape === SHAPE.TORCH) torchBlock(p, id, x, y, z);
         else if (shape === SHAPE.CACTUS) cactusBlock(p, id, x, y, z);
+        else if (shape === SHAPE.BED) bedBlock(p, id, x, y, z);
       }
 
   return {
@@ -372,5 +373,26 @@ function cactusBlock(p, id, x, y, z) {
       return q;
     });
     emitQuad(opaqueBuilder, pts, UVS, b.tex[f], 0, (l & 15) * 16, (l >> 4) * 16, Math.round(255 * face.shade));
+  }
+}
+
+// Lit : pavé de 9/16 de haut, oreiller orienté selon la direction de pose.
+function bedBlock(p, id, x, y, z) {
+  const b = blocks[id];
+  const h = 9 / 16;
+  const meta = pMeta[p];
+  const rot = meta === 5 ? 2 : meta === 0 ? 3 : meta === 1 ? 1 : 0;
+  const own = pLight[p];
+  const top = FACES[2];
+  emitQuad(opaqueBuilder, top.c.map((c) => [x + c[0], y + c[1] * h, z + c[2]]), [0, 1, 2, 3].map((k) => UVS[(k + rot) & 3]),
+    b.tex[2], 0, (own & 15) * 16, (own >> 4) * 16, 255);
+  for (const f of [0, 1, 3, 4, 5]) {
+    const face = FACES[f];
+    const np = p + face.nOff;
+    if (OPAQUE[pBlocks[np]]) continue;
+    const l = pLight[np];
+    const pts = face.c.map((c) => [x + c[0], y + c[1] * h, z + c[2]]);
+    const uvs = f === 3 ? UVS : face.c.map((c, k) => [UVS[k][0], c[1] ? 7 : 16]);
+    emitQuad(opaqueBuilder, pts, uvs, b.tex[f], 0, (l & 15) * 16, (l >> 4) * 16, Math.round(255 * face.shade));
   }
 }

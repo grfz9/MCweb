@@ -347,8 +347,8 @@ export class Renderer {
     horizon = mix3(horizon, [0.95, 0.55, 0.32], sunset * 0.5);
     const env = {
       sunDir,
-      sun: 0.14 + 0.86 * day,
-      skyLightColor: mix3([0.5, 0.56, 0.85], [1, 1, 1], day),
+      sun: 0.3 + 0.7 * day,
+      skyLightColor: mix3([0.62, 0.68, 0.95], [1, 1, 1], day),
       zenith,
       horizon,
       glow: [1.0 * sunset, 0.45 * sunset, 0.18 * sunset],
@@ -664,6 +664,7 @@ export class Renderer {
     gl.useProgram(lp.p);
     gl.uniformMatrix4fv(lp.u.u_viewProj, false, this.viewProj);
     gl.uniform3f(lp.u.u_offset, t.x - cam.x, t.y - cam.y, t.z - cam.z);
+    gl.uniform3f(lp.u.u_scale, 1, t.height ?? 1, 1);
     gl.uniform4f(lp.u.u_color, 0, 0, 0, 0.55);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

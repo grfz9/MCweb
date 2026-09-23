@@ -33,7 +33,8 @@ et le dossier `/ (root)`. Le jeu sera servi tel quel.
 - **Mode Survie** : santé, faim, air sous l'eau, dégâts de chute, lave, cactus ; minage avec temps et outils
   (bois, pierre, fer, or, diamant) qui s'usent ; objets qui tombent au sol et se ramassent.
 - **Artisanat** 2×2 dans l'inventaire et 3×3 sur la table d'artisanat, **four** avec combustible,
-  **coffres**, nourriture (cuire la viande), TNT et briquet.
+  **coffres**, **lit** (dormir pour passer la nuit, point de réapparition), nourriture (cuire la viande),
+  TNT et briquet ; les feuilles tombent quand on coupe le tronc.
 - **Créatures** : cochons, vaches, moutons, poulets (passifs), zombies qui brûlent au soleil et creepers
   qui explosent (hostiles, la nuit et dans le noir).
 - **Mode Créatif** : tous les blocs, vol (double saut), casse instantanée.

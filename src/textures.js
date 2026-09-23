@@ -28,7 +28,7 @@ export const TILE_NAMES = [
   'torch', 'tall_grass', 'dandelion', 'poppy', 'dead_bush',
   'oak_sapling', 'birch_sapling', 'spruce_sapling',
   'cactus_side', 'cactus_top', 'sandstone_top', 'sandstone_side', 'sandstone_bottom',
-  'bricks', 'stone_bricks', 'bookshelf', 'tnt_side', 'tnt_top', 'tnt_bottom',
+  'bricks', 'stone_bricks', 'bookshelf', 'tnt_side', 'tnt_top', 'tnt_bottom', 'bed_top', 'bed_side',
   ...WOOL_NAMES.map((n) => n + '_wool'),
   'destroy_0', 'destroy_1', 'destroy_2', 'destroy_3', 'destroy_4',
   'destroy_5', 'destroy_6', 'destroy_7', 'destroy_8', 'destroy_9',
@@ -619,6 +619,25 @@ const PAINTERS = {
   },
   tnt_bottom: (img, r) => {
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) img.set(x, y, mul([190, 50, 36], 0.92 + r() * 0.12));
+  },
+  bed_top: (img, r) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      let c;
+      if (x === 0 || x === 15) c = mul([150, 110, 60], 0.9 + r() * 0.15);
+      else if (y < 5) c = mul([232, 232, 228], 0.95 + r() * 0.06);
+      else if (y === 5) c = [190, 190, 186];
+      else c = mul((x + y) % 5 === 0 ? [140, 30, 30] : [168, 38, 36], 0.93 + r() * 0.1);
+      img.set(x, y, c);
+    }
+  },
+  bed_side: (img, r) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      let c = [0, 0, 0, 0];
+      if (y >= 7 && y < 12) c = mul([168, 38, 36], 0.9 + r() * 0.12);
+      else if (y >= 12 && y < 14) c = mul([150, 110, 60], 0.9 + r() * 0.12);
+      else if (y >= 14 && (x < 3 || x > 12)) c = mul([120, 85, 45], 0.9 + r() * 0.1);
+      if (c.length === 4) img.set(x, y, [0, 0, 0], 0); else img.set(x, y, c);
+    }
   },
   // --- Créatures ---
   pig_skin: (img, r) => noiseFill(img, r, [240, 162, 160], 0.05),

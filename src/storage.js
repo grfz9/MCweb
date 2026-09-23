@@ -129,8 +129,10 @@ export const DEFAULT_SETTINGS = {
   clouds: true,
 };
 
-export function loadSettings() {
+export function loadSettings(touch = false) {
   const s = { ...DEFAULT_SETTINGS };
+  // Réglages plus légers et saut automatique sur téléphone/tablette
+  if (touch) Object.assign(s, { renderDistance: 4, autoJump: true, resolution: 80 });
   try {
     const raw = localStorage.getItem('mcweb-settings');
     if (raw) Object.assign(s, JSON.parse(raw));

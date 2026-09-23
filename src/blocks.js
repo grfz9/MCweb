@@ -10,9 +10,10 @@ export const B = {
   DEAD_BUSH: 36, BRICKS: 37, STONE_BRICKS: 38, GLOWSTONE: 39, OBSIDIAN: 40, BOOKSHELF: 41, CLAY: 42,
   TNT: 43, CHEST: 44, COAL_BLOCK: 45, IRON_BLOCK: 46, GOLD_BLOCK: 47, DIAMOND_BLOCK: 48,
   MOSSY_COBBLESTONE: 49, OAK_SAPLING: 50, BIRCH_SAPLING: 51, SPRUCE_SAPLING: 52, WOOL: 53, // 53..68
+  BED: 69,
 };
 
-export const SHAPE = { NONE: 0, CUBE: 1, CROSS: 2, TORCH: 3, LIQUID: 4, CACTUS: 5 };
+export const SHAPE = { NONE: 0, CUBE: 1, CROSS: 2, TORCH: 3, LIQUID: 4, CACTUS: 5, BED: 6 };
 export const ANIM = { NONE: 0, WATER: 1, LAVA: 2, LEAVES: 3, PLANT: 4 };
 
 // Ids d'objets (non-blocs) utilisés dans les tables de butin.
@@ -47,6 +48,7 @@ function def(id, key, name, props) {
     facing: false,
     axis: false,
     interact: null,
+    height: 1, // hauteur de la boîte de collision
     ...props,
   };
   if (!b.opaque && props.lightOpacity === undefined) b.lightOpacity = 0;
@@ -162,6 +164,14 @@ WOOL_NAMES.forEach((n, i) => {
 });
 export const WOOL_INDEX = Object.fromEntries(WOOL_NAMES.map((n, i) => [n, B.WOOL + i]));
 
+def(B.BED, 'bed', 'Lit', {
+  tex: [T.bed_side, T.bed_side, T.bed_top, T.oak_planks, T.bed_side, T.bed_side], shape: SHAPE.BED,
+  opaque: false, hardness: 0.2, sound: 'wool', facing: true, interact: 'bed', height: 9 / 16,
+});
+
+export const LEAVES = new Set([B.OAK_LEAVES, B.BIRCH_LEAVES, B.SPRUCE_LEAVES]);
+export const LOGS = new Set([B.OAK_LOG, B.BIRCH_LOG, B.SPRUCE_LOG]);
+
 // Tables compactes pour les boucles chaudes (maillage, lumière, physique).
 export const OPAQUE = new Uint8Array(256);
 export const SOLID = new Uint8Array(256);
@@ -171,6 +181,7 @@ export const SHAPES = new Uint8Array(256);
 export const TRANSLUCENT = new Uint8Array(256);
 export const REPLACEABLE = new Uint8Array(256);
 export const IS_LIQUID = new Uint8Array(256);
+export const BOX_HEIGHT = new Float32Array(256).fill(1);
 for (let i = 0; i < 256; i++) {
   const b = blocks[i];
   if (!b) { OPAQUE[i] = 1; SOLID[i] = 1; LIGHT_OPACITY[i] = 15; SHAPES[i] = SHAPE.CUBE; continue; }
@@ -182,6 +193,7 @@ for (let i = 0; i < 256; i++) {
   TRANSLUCENT[i] = b.translucent ? 1 : 0;
   REPLACEABLE[i] = b.replaceable ? 1 : 0;
   IS_LIQUID[i] = b.shape === SHAPE.LIQUID ? 1 : 0;
+  BOX_HEIGHT[i] = b.height;
 }
 
 export const isLiquid = (id) => IS_LIQUID[id] === 1;

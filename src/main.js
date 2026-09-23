@@ -15,10 +15,10 @@ function fatal(message) {
 
 async function boot() {
   const canvas = document.getElementById('game-canvas');
-  const settings = loadSettings();
+  const touch = window.matchMedia('(pointer: coarse)').matches;
+  const settings = loadSettings(touch);
   const storage = await openStorage();
   const audio = new GameAudio();
-  const touch = window.matchMedia('(pointer: coarse)').matches;
   document.body.classList.toggle('touch', touch);
 
   let game;
