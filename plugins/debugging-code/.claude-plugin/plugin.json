@@ -1,0 +1,23 @@
+{
+  "name": "debugging-code",
+  "description": "Interactively debug source code — set breakpoints, step through execution, inspect live variables, evaluate expressions, and trace root causes.",
+  "version": "1.1.2",
+  "author": {
+    "name": "Almog Baku"
+  },
+  "homepage": "https://github.com/AlmogBaku/debug-skill",
+  "repository": "https://github.com/AlmogBaku/debug-skill",
+  "license": "MIT",
+  "keywords": [
+    "debugging",
+    "dap",
+    "python",
+    "go",
+    "nodejs",
+    "typescript",
+    "rust",
+    "breakpoints",
+    "debugger",
+    "debug-adapter-protocol"
+  ]
+}

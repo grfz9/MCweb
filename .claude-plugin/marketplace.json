@@ -1,0 +1,61 @@
+{
+  "name": "mcweb-skills",
+  "owner": {
+    "name": "grfz9"
+  },
+  "metadata": {
+    "description": "Personal skill collection"
+  },
+  "plugins": [
+    {
+      "name": "superpowers",
+      "source": "./plugins/superpowers",
+      "description": "Core dev workflow skills: brainstorming, TDD, debugging, plans, code review"
+    },
+    {
+      "name": "design",
+      "source": "./plugins/design",
+      "description": "Frontend, canvas, web artifacts, theme, brand and Remotion design skills"
+    },
+    {
+      "name": "marketing-skills",
+      "source": "./plugins/marketing-skills",
+      "description": "Marketing: copywriting, CRO, pricing, ads, SEO, email, launch, analytics"
+    },
+    {
+      "name": "claude-seo",
+      "source": "./plugins/claude-seo",
+      "description": "Full SEO suite: audits, technical, schema, GEO/AI search, local, sitemap"
+    },
+    {
+      "name": "debugging-code",
+      "source": "./plugins/debugging-code",
+      "description": "Interactive debugger skill with breakpoints and stepping"
+    },
+    {
+      "name": "file-search",
+      "source": "./plugins/file-search",
+      "description": "Fast codebase search with ripgrep, ast-grep, fd, rga"
+    },
+    {
+      "name": "obsidian",
+      "source": "./plugins/obsidian",
+      "description": "Obsidian Markdown, Bases, Canvas, CLI and defuddle skills"
+    },
+    {
+      "name": "notebooklm",
+      "source": "./plugins/notebooklm",
+      "description": "Query Google NotebookLM notebooks"
+    },
+    {
+      "name": "caveman",
+      "source": "./plugins/caveman",
+      "description": "Terse caveman mode and lean engineering skills"
+    },
+    {
+      "name": "omniroute",
+      "source": "./plugins/omniroute",
+      "description": "Operate the OmniRoute AI gateway and CLI"
+    }
+  ]
+}
