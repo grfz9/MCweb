@@ -1,0 +1,5 @@
+{
+  "name": "notebooklm",
+  "version": "1.0.0",
+  "description": "Query Google NotebookLM notebooks from Claude"
+}
