@@ -32,6 +32,7 @@ export class Player {
     this.bob = 0; this.bobAmount = 0;
     this.eyeOffset = 1.62;
     this.lastHurtBy = null;
+    this.lastAttacker = null; // créature (ou TNT) qui a touché le joueur en dernier
   }
 
   get eyeY() { return this.y + this.eyeOffset; }
@@ -94,8 +95,8 @@ export class Player {
       if (input.jump && this.onGround) this.jump(wx, wz);
     }
 
-    // Saut automatique (utile sur mobile)
-    if (this.game.settings.autoJump && this.onGround && !this.flying && moving && !this.sneaking) {
+    // Saut automatique (utile sur mobile, et toujours actif en LIVE : le chat n'a pas à sauter chaque marche)
+    if ((this.game.settings.autoJump || this.game.live) && this.onGround && !this.flying && moving && !this.sneaking) {
       const hl = Math.hypot(this.vx, this.vz);
       if (hl > 0.5) {
         const ax = this.x + (this.vx / hl) * 0.55, az = this.z + (this.vz / hl) * 0.55;
@@ -218,6 +219,7 @@ export class Player {
       this.vy = Math.max(this.vy, 5);
     }
     this.lastHurtBy = cause;
+    if (source) this.lastAttacker = source;
     this.game.onPlayerHurt(cause);
     if (this.health <= 0) {
       this.health = 0;

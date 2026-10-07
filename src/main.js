@@ -4,6 +4,7 @@ import { UI } from './ui/ui.js';
 import { TouchControls } from './ui/touch.js';
 import { openStorage, loadSettings } from './storage.js';
 import { GameAudio } from './audio.js';
+import { liveOptionsFromURL } from './live/commands.js';
 
 function fatal(message) {
   for (const s of document.querySelectorAll('.screen')) s.hidden = true;
@@ -32,15 +33,24 @@ async function boot() {
   const ui = new UI(game);
   game.ui = ui;
   if (touch) new TouchControls(game);
-  game.startTitle();
-  ui.showTitle();
+  const liveOpts = liveOptionsFromURL(location.search);
+  if (liveOpts) {
+    // Mode LIVE TikTok : chargé seulement quand on le demande (?live ou ?live=demo).
+    const { LiveController } = await import('./live/live.js');
+    game.live = new LiveController(game, liveOpts);
+    await game.startLiveWorld(liveOpts);
+    game.live.start();
+  } else {
+    game.startTitle();
+    ui.showTitle();
+  }
 
   const unlock = () => audio.unlock();
   window.addEventListener('pointerdown', unlock);
   window.addEventListener('keydown', unlock);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) return;
-    if (game.state === 'playing') game.pause();
+    if (game.state === 'playing' && !game.live) game.pause(); // en LIVE, le jeu continue même en arrière-plan
     else game.save();
   });
   window.addEventListener('pagehide', () => game.save());

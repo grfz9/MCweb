@@ -55,6 +55,7 @@
         <button class="btn" type="button" data-action="worlds">Solo</button>
         <button class="btn" type="button" data-action="options">Options</button>
         <button class="btn" type="button" data-action="help">Commandes</button>
+        <button class="btn" type="button" data-action="live">Jouer en LIVE sur TikTok</button>
       </div>
     </div>
     <p class="footer-note">Textures, sons et monde générés par le code · sauvegarde dans votre navigateur</p>
@@ -120,6 +121,25 @@
     </div>
     <div class="row">
       <button class="btn" type="button" data-action="help-done">Terminé</button>
+    </div>
+  </section>
+
+  <section id="screen-live" class="screen dirt" hidden>
+    <h2>Jouer en LIVE sur TikTok</h2>
+    <div class="help">
+      <p class="lead">Vos spectateurs jouent ensemble en écrivant dans le chat du LIVE : <b>avance</b>, <b>gauche</b>, <b>mine</b>,
+        <b>creuse</b>, <b>pose</b>, <b>attaque</b>, <b>fabrique pioche</b>… Leurs cadeaux font apparaître des zombies et des creepers
+        à leur nom, de la TNT ou des diamants, et chaque palier de likes soigne le joueur. Objectif commun : trouver un diamant.</p>
+      <ol>
+        <li>Sur l’ordinateur qui diffuse : <code>npm install</code>, puis <code>npm run live -- @votre_pseudo</code>.</li>
+        <li>Dans TikTok LIVE Studio ou OBS, ajoutez une source « Navigateur » (ou « Lien ») : <code>http://localhost:8080/?live</code>, en 1080 × 1920.</li>
+        <li>Lancez votre LIVE : le jeu se branche tout seul sur votre chat.</li>
+      </ol>
+      <p>Options d’adresse : <code>&amp;vote</code> (la commande la plus votée gagne), <code>&amp;controle=streamer</code> (vous jouez, le chat agit avec ses cadeaux), <code>&amp;nouveau</code> (nouveau monde).</p>
+    </div>
+    <div class="row">
+      <button class="btn" type="button" data-action="live-demo">Essayer avec des spectateurs simulés</button>
+      <button class="btn" type="button" data-action="title">Retour</button>
     </div>
   </section>
 

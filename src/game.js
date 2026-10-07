@@ -2,7 +2,7 @@
 import { Renderer } from './render/renderer.js';
 import { Input } from './input.js';
 import { World } from './world/world.js';
-import { BIOME_NAMES } from './world/generator.js';
+import { BIOME, BIOME_NAMES } from './world/generator.js';
 import { Player } from './entity/player.js';
 import { ItemEntity, FallingBlock, PrimedTnt, Mob, Particles, PASSIVE_MOBS, MOB_TYPES } from './entity/entities.js';
 import { rayBox, moveEntity } from './entity/physics.js';
@@ -26,6 +26,7 @@ export class Game {
     this.settings = settings;
     this.touch = touch; // vrai sur écran tactile
     this.ui = null; // attaché par main.js
+    this.live = null; // mode LIVE TikTok (src/live/live.js), attaché par main.js
 
     this.state = 'title';
     this.world = null;
@@ -119,6 +120,21 @@ export class Game {
     return this.playWorld(meta);
   }
 
+  // Mode LIVE : reprend le monde « LIVE TikTok » (ou en crée un) sans passer par les menus.
+  async startLiveWorld(opts) {
+    const id = 'tiktok-live';
+    if (opts.fresh) await this.storage.deleteWorld(id);
+    let meta = await this.storage.getWorld(id);
+    if (!meta) {
+      meta = {
+        id, name: 'LIVE TikTok', seed: seedFromString(opts.seed), seedText: opts.seed.trim(),
+        gamemode: opts.mode, created: Date.now(), lastPlayed: Date.now(), time: 1000, player: null,
+      };
+      await this.storage.putWorld(meta);
+    }
+    return this.playWorld(meta);
+  }
+
   async playWorld(meta) {
     this.disposeWorld();
     this.state = 'loading';
@@ -140,7 +156,7 @@ export class Game {
     this.player = player;
     if (meta.player) player.load(meta.player);
     else {
-      const sp = world.gen.findSpawn();
+      const sp = world.gen.findSpawn(this.live ? [BIOME.FOREST, BIOME.BIRCH_FOREST, BIOME.TAIGA, BIOME.PLAINS] : null);
       player.x = sp.x; player.z = sp.z; player.y = WORLD_HEIGHT;
       player.spawn = { x: sp.x, y: -1, z: sp.z };
       if (this.gamemode === GAMEMODE.CREATIVE) this.giveCreativeStarter();
@@ -171,8 +187,9 @@ export class Game {
     this.ui.hideLoading();
     this.ui.showGame();
     this.input.enabled = true;
-    if (!this.touch) this.ui.showClickToPlay();
     this.saveTimer = 0;
+    if (this.live) { this.live.checkGoals(); return; }
+    if (!this.touch) this.ui.showClickToPlay();
     this.chat(`Bienvenue dans « ${meta.name} » ! Tapez /help pour la liste des commandes.`);
     if (!meta.player && this.gamemode === GAMEMODE.SURVIVAL) {
       this.chat('Astuce : maintenez le clic sur un arbre pour récolter du bois, puis ouvrez l’inventaire (E) pour fabriquer des planches.');
@@ -338,6 +355,7 @@ export class Game {
     }
 
     if (playing) this.handleKeys();
+    if (this.live) this.live.update(dt);
 
     // Joueur (sous-pas pour la stabilité)
     const sleeping = this.sleepTimer > 0;
@@ -860,7 +878,7 @@ export class Game {
       if (!(e instanceof Mob)) continue;
       const d = Math.hypot(e.x - p.x, e.z - p.z);
       if (e.hostile) {
-        if (d > 80 || (this.isDay() && d > 40 && Math.random() < 0.02)) { e.dead = true; continue; }
+        if (e.gifted ? d > 140 : d > 80 || (this.isDay() && d > 40 && Math.random() < 0.02)) { e.dead = true; continue; }
         hostile++;
       } else {
         if (d > 140) { e.dead = true; continue; }
@@ -933,8 +951,10 @@ export class Game {
       const dmg = Math.floor(((impact * impact + impact) / 2) * 7 * reachR + 1);
       const k = (impact * 14) / (d || 1);
       e.vx += (cx - x) * k; e.vy += (cy - y) * k + impact * 4; e.vz += (cz - z) * k;
-      if (isPlayer) e.damage(dmg, null, 'explosion');
-      else if (e.damage) e.damage(dmg, e === source ? 'explosion_self' : null);
+      if (isPlayer) {
+        if (source) e.lastAttacker = source; // pour savoir à qui « appartenait » la TNT ou le creeper
+        e.damage(dmg, null, 'explosion');
+      } else if (e.damage) e.damage(dmg, e === source ? 'explosion_self' : null);
     };
     hurt(this.player, true);
     for (const e of this.entities) if (e !== source && !e.dead) hurt(e, false);
@@ -966,13 +986,15 @@ export class Game {
     this.input.releaseAll();
     this.ui.intentionalUnlock = true;
     this.input.exitLock();
-    this.ui.showDeath(msg);
+    if (this.live) this.live.onPlayerDeath(cause, p.lastAttacker);
+    else this.ui.showDeath(msg);
     this.chat(msg);
   }
 
   respawn() {
     const p = this.player;
     p.respawn();
+    p.lastAttacker = null;
     const world = this.world;
     // S'assure que le point de réapparition est dégagé
     world.updateLoading(p.x, p.z, 2, 200);
@@ -1035,6 +1057,7 @@ export class Game {
       } : null,
     });
     this.cameraFluid = fluid;
+    if (this.live) this.live.overlay.drawTags();
   }
 
   debugInfo() {
@@ -1064,7 +1087,8 @@ export class Game {
 
   // ------------------------------------------------------------------ discussion et commandes
   chat(msg) {
-    if (this.ui) this.ui.addChat(msg);
+    if (this.live) this.live.overlay.feedText(msg, 'sys');
+    else if (this.ui) this.ui.addChat(msg);
   }
 
   runCommand(text) {
@@ -1081,8 +1105,22 @@ export class Game {
     switch (cmd.toLowerCase()) {
       case 'help':
       case 'aide':
-        this.chat('Commandes : /gamemode <survie|creatif>, /time set <jour|nuit|midi|minuit|n>, /tp x y z, /give <objet> [n], /summon <creature>, /kill, /spawnpoint, /seed, /clear, /daylight <on|off>');
+        this.chat('Commandes : /gamemode <survie|creatif>, /time set <jour|nuit|midi|minuit|n>, /tp x y z, /give <objet> [n], /summon <creature>, /kill, /spawnpoint, /seed, /clear, /daylight <on|off>, /live …');
         break;
+      case 'live': {
+        // Simule un événement TikTok pour tester : /live gift 5 pseudo [n] · /live chat avance · /live like 50 · /live follow pseudo
+        if (!this.live) { this.chat('Mode LIVE inactif : ouvrez le jeu avec ?live=demo ou via « npm run live ».'); break; }
+        const kind = (args[0] || '').toLowerCase();
+        const who = (name) => ({ id: name || 'streamer', name: name || 'streamer' });
+        if (kind === 'chat' && args.length > 1) this.live.handle({ type: 'chat', user: who(), text: args.slice(1).join(' ') });
+        else if (kind === 'gift' || kind === 'cadeau') {
+          const coins = Math.max(1, parseInt(args[1], 10) || 1);
+          this.live.handle({ type: 'gift', user: who(args[2]), gift: { id: '', name: `Cadeau de ${coins} pièce${coins > 1 ? 's' : ''}`, coins, count: Math.max(1, parseInt(args[3], 10) || 1) } });
+        } else if (kind === 'like') this.live.handle({ type: 'like', user: who(args[2]), likes: Math.max(1, parseInt(args[1], 10) || 10) });
+        else if (kind === 'follow' || kind === 'share') this.live.handle({ type: kind, user: who(args[1]) });
+        else this.chat('Usage : /live chat <texte> · /live gift <pièces> [pseudo] [n] · /live like [n] · /live follow [pseudo]');
+        break;
+      }
       case 'gamemode':
       case 'gm': {
         const a = (args[0] || '').toLowerCase();

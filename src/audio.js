@@ -214,6 +214,12 @@ export class GameAudio {
         this.tone(dest, { wave: 'triangle', f0: 180, f1: 120, d: 0.25, gain: 0.25, t, lp: 800 });
         this.noiseBurst(dest, MATERIALS.wood, t, 0.3, 0.7);
         break;
+      case 'levelup': // objectif atteint (mode LIVE)
+        [0, 4, 7, 12, 16].forEach((s, i) => this.tone(dest, { wave: 'triangle', f0: 523 * 2 ** (s / 12), d: 0.22, gain: 0.22, t: t + i * 0.09 }));
+        break;
+      case 'gift': // cadeau reçu (mode LIVE)
+        [19, 24, 28].forEach((s, i) => this.tone(dest, { f0: 262 * 2 ** (s / 12), d: 0.3, gain: 0.16, t: t + i * 0.06 }));
+        break;
     }
   }
 

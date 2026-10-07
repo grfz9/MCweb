@@ -260,8 +260,8 @@ export class Mob extends Entity {
     const dist = Math.hypot(dx, dz);
     const dy = player.y - this.y;
 
-    // Les zombies brûlent au soleil
-    if (this.type === 'zombie' && this.game.isDay() && !this.inWater) {
+    // Les zombies brûlent au soleil (sauf ceux offerts par les spectateurs du LIVE)
+    if (this.type === 'zombie' && !this.gifted && this.game.isDay() && !this.inWater) {
       const sky = world.getSkyLight(Math.floor(this.x), Math.floor(this.y + this.h), Math.floor(this.z));
       if (sky >= 14) {
         this.burnTimer -= dt;

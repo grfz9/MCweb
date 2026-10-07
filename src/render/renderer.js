@@ -374,6 +374,7 @@ export class Renderer {
     const W = this.canvas.width, H = this.canvas.height;
     gl.viewport(0, 0, W, H);
     const cam = frame.cam;
+    this.cam = cam;
     const world = frame.world;
     const R = frame.renderDistance;
     const env = this.environment(frame.dayTime, frame.fluid);
