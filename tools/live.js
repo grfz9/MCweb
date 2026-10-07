@@ -81,7 +81,9 @@ async function connectTikTok() {
     setStatus('error', 'Module tiktok-live-connector introuvable : lancez « npm install » dans le dossier du jeu.');
     return;
   }
-  const options = { processInitialData: false, enableExtendedGiftInfo: true };
+  // Pas d'enableExtendedGiftInfo : la liste des cadeaux demande un abonnement payant Euler Stream,
+  // et chaque événement « gift » contient déjà son prix (gift.diamondCount).
+  const options = { processInitialData: false, enableExtendedGiftInfo: false };
   if (process.env.EULER_API_KEY) options.signApiKey = process.env.EULER_API_KEY;
   const conn = new lib.TikTokLiveConnection(username, options);
 
