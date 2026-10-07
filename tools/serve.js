@@ -2,10 +2,9 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const port = Number(process.argv[2] || process.env.PORT || 8080);
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -16,7 +15,7 @@ const types = {
   '.md': 'text/markdown; charset=utf-8',
 };
 
-http.createServer((req, res) => {
+export function serveStatic(req, res) {
   const url = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   let file = path.join(root, url);
   if (!file.startsWith(root)) { res.writeHead(403).end(); return; }
@@ -26,6 +25,11 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
     res.end(data);
   });
-}).listen(port, () => {
-  console.log(`MCweb disponible sur http://localhost:${port}`);
-});
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const port = Number(process.argv[2] || process.env.PORT || 8080);
+  http.createServer(serveStatic).listen(port, () => {
+    console.log(`MCweb disponible sur http://localhost:${port}`);
+  });
+}

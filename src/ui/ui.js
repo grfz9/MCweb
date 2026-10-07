@@ -25,7 +25,7 @@ const OPTIONS = [
   { key: 'showFps', label: 'Afficher les images/s', toggle: true },
 ];
 
-const SCREENS = ['screen-title', 'screen-worlds', 'screen-create', 'screen-options', 'screen-help', 'screen-pause',
+const SCREENS = ['screen-title', 'screen-worlds', 'screen-create', 'screen-options', 'screen-help', 'screen-live', 'screen-pause',
   'screen-death', 'screen-loading', 'screen-click', 'screen-container', 'screen-chat', 'screen-error'];
 
 const $ = (id) => document.getElementById(id);
@@ -258,6 +258,8 @@ export class UI {
       case 'help-done':
         if (this.helpReturn === 'pause') this.showPause(); else this.showTitle();
         break;
+      case 'live': this.show('screen-live'); break;
+      case 'live-demo': location.search = '?live=demo'; break;
       case 'resume': game.resume(); break;
       case 'quit': game.quitToTitle(); break;
       case 'respawn': game.respawn(); break;

@@ -2,7 +2,7 @@
 
 Un jeu de construction en blocs façon Minecraft, **entièrement jouable dans le navigateur**.
 Écrit en JavaScript pur avec WebGL2 : aucune dépendance, aucune étape de compilation, aucune image
-ni aucun son externe. Les textures, les sons, la musique et le monde sont générés par le code.
+ni aucun son externe. **Il se joue aussi en LIVE sur TikTok, avec tous les spectateurs à la fois** (voir plus bas). Les textures, les sons, la musique et le monde sont générés par le code.
 
 ## Lancer le jeu
 
@@ -74,6 +74,92 @@ objet, Maj+clic pour ranger rapidement, touches 1–9 pour échanger avec la bar
 4. Minez de la pierre, fabriquez des outils en pierre et un four (8 pierres taillées).
 5. Charbon + bâton → 4 torches. Faites cuire le fer dans le four pour des outils en fer.
 
+## Jouer en LIVE sur TikTok
+
+Le mode LIVE transforme une diffusion TikTok en partie **jouée par tous les spectateurs à la fois** :
+
+- **les commentaires pilotent le joueur** : `avance`, `gauche`, `droite`, `saute`, `mine`, `creuse`, `pose`, `attaque`,
+  `fabrique pioche`… ;
+- **les cadeaux changent la partie** : un zombie ou un creeper qui porte le pseudo du donateur, une pluie de TNT, un kit
+  de survie, une pluie de diamants… ;
+- **les likes remplissent une jauge** qui soigne le joueur tous les 100 likes, **un abonnement** fait apparaître un animal
+  au nom du nouvel abonné, **un partage** donne du pain ;
+- un **fil rouge** donne un but commun au LIVE : de la première bûche jusqu'au diamant (10 objectifs), avec le compteur de
+  morts et le nom de celui dont le creeper a tué le joueur.
+
+L'écran est pensé pour le format vertical 1080 × 1920 et laisse libres les zones que l'appli TikTok recouvre chez les
+spectateurs (haut, commentaires en bas, boutons à droite).
+
+### Essayer tout de suite (sans être en LIVE)
+
+Ouvrez le jeu avec `?live=demo` (par exemple <http://localhost:8080/?live=demo>, ou sur GitHub Pages) : des spectateurs
+simulés envoient des commandes, des cadeaux et des likes. Le bouton « Jouer en LIVE sur TikTok » de l'écran titre y mène aussi.
+
+### Pendant un vrai LIVE
+
+Il faut Node.js 20 ou plus récent sur l'ordinateur qui diffuse.
+
+```bash
+npm install                       # une seule fois : installe tiktok-live-connector
+npm run live -- @votre_pseudo     # relaie votre chat TikTok au jeu → http://localhost:8080/?live
+npm run live -- --demo            # même chose avec des spectateurs simulés, pour régler la scène
+```
+
+1. Dans **TikTok LIVE Studio** ou **OBS**, ajoutez une source « Navigateur » (ou « Lien ») pointant vers
+   `http://localhost:8080/?live`, en **1080 × 1920**.
+2. Lancez votre LIVE. Le pont se connecte tout seul à votre chat (et réessaie si vous n'êtes pas encore en direct) ;
+   l'état de la connexion s'affiche en haut de l'écran du jeu.
+3. Le monde « LIVE TikTok » est sauvegardé dans le navigateur : le LIVE suivant reprend là où le précédent s'est arrêté.
+
+Options d'adresse (à ajouter après `?live`) :
+
+| Option | Effet |
+| --- | --- |
+| `&vote` | Mode démocratie : toutes les 3 s, la commande la plus écrite l'emporte (conseillé au-delà de ~50 spectateurs) |
+| `&controle=streamer` | Vous jouez au clavier ; le chat n'agit qu'avec ses cadeaux, ses likes et ses abonnements |
+| `&nouveau` | Repart d'un monde neuf (`&graine=…` pour choisir la graine, `&mode=creatif` pour le créatif) |
+
+Pour tester un effet en jeu sans attendre un cadeau, tapez dans la discussion du jeu (`T`) : `/live gift 99 pseudo`,
+`/live chat avance`, `/live like 100`, `/live follow pseudo`.
+
+À savoir :
+
+- TikTok impose des conditions pour diffuser en LIVE (âge, nombre d'abonnés, accès à LIVE Studio ou à une clé de
+  diffusion) qui varient selon les pays.
+- La lecture du chat passe par [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector), une
+  bibliothèque non officielle : TikTok peut la casser à tout moment. Elle utilise le service de signature Euler Stream,
+  gratuit avec des limites ; une clé (`EULER_API_KEY=… npm run live -- @pseudo`) relève ces limites.
+- Le jeu continue même quand la page n'a pas le focus, mais le navigateur met en pause les onglets cachés : utilisez une
+  source « Navigateur » d'OBS/LIVE Studio plutôt qu'une capture d'une fenêtre réduite.
+
+#### Commandes du chat
+
+| Écrire | Effet |
+| --- | --- |
+| `avance` / `recule` (+ nombre de blocs) · `cours` | Se déplacer (saut automatique des marches) |
+| `gauche` / `droite` (+ degrés, 90 par défaut) · `demi-tour` | Tourner |
+| `haut` / `bas` / `droit` | Lever, baisser ou redresser le regard |
+| `saute` · `pilier` | Sauter en avant · monter d'un bloc en posant un bloc sous ses pieds |
+| `mine` · `creuse` (+ nombre) | Casser le bloc visé (meilleur outil choisi tout seul) · creuser un tunnel droit devant |
+| `pose` · `attaque` · `mange` | Poser un bloc · frapper la créature la plus proche · manger |
+| `fabrique <objet>` · `cuis` | Fabriquer avec l'inventaire (une table doit être à côté pour les recettes 3×3) · cuire au four |
+| `prends <objet>` · `1` à `9` | Prendre un objet en main |
+
+Les accents, majuscules et emojis (⬆️ ⬅️ ➡️ ⛏️ ⚔️) sont acceptés ; une même personne ne peut envoyer qu'une commande
+toutes les 1,2 s.
+
+#### Cadeaux (valeur d'un cadeau, en pièces TikTok)
+
+| Pièces | Effet | Pièces | Effet |
+| --- | --- | --- | --- |
+| 1 | 🧟 Zombie à ton nom | 99 | ☠️ Horde de monstres |
+| 5 | 💚 Creeper à ton nom | 199 | 🚀 Décollage du joueur |
+| 10 | 🧨 Pluie de TNT | 299 | 💎 Pluie de diamants |
+| 30 | 🎁 Kit de survie | 500 | ☢️ Méga TNT |
+
+Un cadeau envoyé en série (« ×10 ») déclenche son effet autant de fois (jusqu'à 10). Les paliers se règlent dans
+`src/live/commands.js` (`GIFT_TIERS`).
+
 ## Structure du code
 
 ```
@@ -87,6 +173,9 @@ src/ui/                        menus et HUD, inventaires, icônes, commandes tac
 src/textures.js                toutes les textures 16×16 peintes par le code
 src/blocks.js, src/items.js    registres des blocs et objets ; src/crafting.js : recettes
 src/audio.js                   sons et musique synthétisés (Web Audio)
+src/live/                      mode LIVE TikTok : commandes du chat et cadeaux (commands.js), actions et effets (live.js),
+                               habillage vertical (overlay.js), artisanat à la voix (autocraft.js), spectateurs simulés (demo.js)
+tools/live.js                  pont TikTok LIVE → jeu (Server-Sent Events) ; tools/tiktok-events.js : format des événements
 tests/                         tests unitaires (node --test)
 ```
 

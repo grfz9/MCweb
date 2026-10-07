@@ -306,7 +306,19 @@ export class Generator {
   }
 
   // Cherche un point d'apparition sur la terre ferme près de l'origine.
-  findSpawn() {
+  // prefer : liste de biomes recherchés en priorité (ex. forêts pour le mode LIVE).
+  findSpawn(prefer = null) {
+    if (prefer) {
+      for (let r = 0; r < 1500; r += 16) {
+        for (let a = 0; a < 16; a++) {
+          const ang = (a / 16) * Math.PI * 2;
+          const x = Math.round(Math.cos(ang) * r), z = Math.round(Math.sin(ang) * r);
+          const h = this.column(x, z);
+          if (h > SEA_LEVEL + 1 && h < 90 && prefer.includes(this.biome)) return { x: x + 0.5, z: z + 0.5, h };
+          if (r === 0) break;
+        }
+      }
+    }
     for (let r = 0; r < 4000; r += 16) {
       for (let a = 0; a < 16; a++) {
         const ang = (a / 16) * Math.PI * 2;

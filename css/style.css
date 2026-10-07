@@ -313,3 +313,123 @@ html, body {
   .splash { animation: none; }
   #hearts.low img { animation: none; }
 }
+
+/* ------------------------------------------------------------ mode LIVE TikTok (?live) */
+/* Pensé pour une source 1080 × 1920 : --u vaut 1 % de la largeur en portrait. Les zones couvertes
+   par l'appli TikTok chez les spectateurs (haut, commentaires en bas, boutons à droite) restent libres. */
+.live {
+  --u: min(1vw, 0.5625vh);
+  --live-pink: #fe2c55; --live-cyan: #25f4ee;
+  position: absolute; inset: 0; z-index: 11; pointer-events: none;
+  display: flex; flex-direction: column; gap: calc(var(--u) * 1.6);
+  padding: calc(var(--u) * 2 + env(safe-area-inset-top, 0px)) calc(var(--u) * 3) 0;
+  font-size: calc(var(--u) * 3.1); line-height: 1.25; color: #fff; text-shadow: 2px 2px 0 #000;
+}
+.live b { font-weight: 600; color: var(--accent); }
+.live-top { display: flex; align-items: center; gap: calc(var(--u) * 2); }
+.live-badge { display: flex; align-items: center; gap: 0.4em; background: var(--live-pink); padding: 0.1em 0.55em; font-weight: 700; text-shadow: none; }
+.live-badge i { width: 0.5em; height: 0.5em; background: #fff; animation: live-blink 1s steps(2) infinite; }
+@keyframes live-blink { 50% { opacity: 0; } }
+.live-title { flex: 1; font-size: 1.15em; font-weight: 600; }
+.live-title b { color: var(--live-cyan); }
+.live-viewers { background: rgba(0, 0, 0, 0.55); padding: 0.1em 0.55em; font-variant-numeric: tabular-nums; }
+.live-status { position: absolute; left: calc(var(--u) * 3); right: calc(var(--u) * 3); top: calc(var(--u) * 9); z-index: 1; background: rgba(0, 0, 0, 0.85); border-left: 0.3em solid var(--live-cyan); padding: 0.2em 0.6em; font-size: 0.8em; }
+.live-status.error, .live-status.offline { border-color: var(--danger); }
+.live-status.connecting { border-color: var(--accent); }
+.live-help { background: rgba(0, 0, 0, 0.55); border: 2px solid rgba(255, 255, 255, 0.18); padding: 0.45em 0.6em 0.55em; }
+.live-help-title { margin: 0 0 0.35em; font-size: 0.9em; }
+.live-chips { display: flex; flex-wrap: wrap; gap: 0.35em; }
+.live-chip { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); padding: 0.05em 0.45em; font-size: 0.85em; color: var(--ink-dim); white-space: nowrap; }
+.live-chip b { color: var(--live-cyan); font-size: 1.12em; }
+.live-goal { display: flex; align-items: baseline; gap: 0.6em; background: rgba(0, 0, 0, 0.55); border-left: 0.3em solid #80ff20; padding: 0.25em 0.6em; }
+.live-goal-step { color: #80ff20; font-size: 0.8em; white-space: nowrap; }
+.live-goal-text { flex: 1; font-weight: 600; }
+.live-goal-deaths { color: var(--ink-dim); font-size: 0.85em; white-space: nowrap; }
+.live-likes { display: flex; align-items: center; gap: 0.6em; font-size: 0.85em; }
+.live-bar { flex: 0 0 38%; height: 0.75em; background: rgba(0, 0, 0, 0.6); border: 2px solid #000; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2); }
+.live-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--live-pink), #ff9ab0); transition: width 0.3s; }
+
+.live-activity { min-height: 1.8em; display: flex; flex-direction: column; align-items: flex-start; gap: 0.3em; }
+.live-activity.vote { min-height: 5.6em; }
+.live-mid { display: flex; justify-content: space-between; align-items: flex-start; gap: calc(var(--u) * 3); }
+.live-feed { flex: 0 1 50%; display: flex; flex-direction: column; gap: 0.3em; font-size: 0.88em; }
+.live-line {
+  width: fit-content; max-width: 100%; background: rgba(0, 0, 0, 0.55); padding: 0.1em 0.5em; border-left: 0.25em solid var(--ink-dim);
+  overflow-wrap: anywhere; animation: live-in 0.25s ease-out; transition: opacity 0.8s;
+}
+.live-line.old { opacity: 0.55; }
+.live-line.cmd { border-color: var(--live-cyan); }
+.live-line.gift { border-color: var(--live-pink); background: rgba(80, 0, 20, 0.6); }
+.live-line.social, .live-line.like { border-color: #ff9ab0; }
+.live-line.goal { border-color: #80ff20; }
+.live-line.death { border-color: var(--danger); background: rgba(80, 0, 0, 0.6); }
+.live-line.fail { border-color: #777; color: var(--ink-dim); }
+.live-line.sys { border-color: #777; color: var(--ink-dim); font-size: 0.9em; }
+.live-line i { color: var(--ink-dim); font-style: normal; }
+@keyframes live-in { from { transform: translateX(-0.6em); opacity: 0; } }
+
+.live-gifts { flex: 0 0 38%; background: rgba(0, 0, 0, 0.55); border: 2px solid rgba(255, 255, 255, 0.18); padding: 0.35em 0.5em; font-size: 0.72em; }
+.live-gifts li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-gifts h4 { margin: 0 0 0.25em; font-size: 1em; font-weight: 600; color: var(--live-pink); }
+.live-gifts ul + ul, .live-gifts ul + h4 { margin-top: 0.45em; }
+.live-more { color: var(--ink-dim); }
+.live-gifts ul, .live-gifts ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.15em; }
+.live-gifts ol { counter-reset: top; margin-top: 0.3em; }
+.live-gifts ol li { counter-increment: top; display: flex; gap: 0.4em; }
+.live-gifts ol li::before { content: counter(top) '.'; color: var(--accent); }
+.live-gifts ol li.empty::before { content: none; }
+.live-gifts ol li.empty { color: var(--ink-dim); }
+.live-gifts ol b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+.coin { display: inline-block; min-width: 1.9em; text-align: right; color: #ffd84d; font-variant-numeric: tabular-nums; }
+.coin::after { content: ' 🪙'; font-size: 0.8em; }
+
+.live-now {
+  max-width: 100%; background: rgba(0, 0, 0, 0.6); padding: 0.15em 0.7em; border: 2px solid var(--live-cyan);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.live-now small { color: var(--ink-dim); font-size: 0.8em; }
+.live-votes { width: 62%; font-size: 0.85em; display: flex; flex-direction: column; gap: 0.25em; font-size: 0.9em; }
+.live-votes-time { color: var(--accent); }
+.live-vote { position: relative; display: flex; justify-content: space-between; background: rgba(0, 0, 0, 0.6); padding: 0.1em 0.5em; }
+.live-vote i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(37, 244, 238, 0.28); }
+.live-vote span, .live-vote b { position: relative; }
+
+.live-banner {
+  position: absolute; left: 50%; top: 24%; transform: translate(-50%, -50%) scale(0.6); opacity: 0;
+  min-width: 60%; max-width: 92%; text-align: center; padding: 0.5em 1em; background: rgba(10, 6, 20, 0.82);
+  border: 3px solid var(--live-pink); box-shadow: 0 0 0 3px #000, 0 0 2em rgba(254, 44, 85, 0.45);
+  transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.live-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.live-banner .t { font-size: 1.7em; font-weight: 700; line-height: 1.1; }
+.live-banner .s { margin-top: 0.2em; color: var(--accent); }
+.live-banner.goal { border-color: #80ff20; box-shadow: 0 0 0 3px #000, 0 0 2em rgba(128, 255, 32, 0.4); }
+.live-banner.death { border-color: var(--danger); box-shadow: 0 0 0 3px #000, 0 0 2em rgba(255, 60, 40, 0.5); }
+
+.live-tags { position: absolute; inset: 0; overflow: hidden; }
+.live-tag {
+  position: absolute; left: 0; top: 0; transform-origin: 50% 100%; white-space: nowrap;
+  background: rgba(0, 0, 0, 0.5); padding: 0 0.35em; font-size: 0.9em; text-shadow: 1px 1px 0 #000; will-change: transform;
+}
+.live-tag.hostile { color: #ffb0b0; }
+.live-tag.friendly { color: #c8ffb0; }
+
+/* HUD du jeu en LIVE : la discussion passe dans le fil, la barre d'objets remonte au-dessus des commentaires TikTok. */
+.live-mode #chat-log { display: none; }
+.live-mode #hud-bottom { bottom: 24%; }
+.live-mode #item-name { bottom: calc(24% + var(--hud-slot) * 2); }
+@media (orientation: landscape) {
+  .live-feed { flex-basis: 34%; }
+  .live-gifts { flex-basis: 24%; }
+  .live-mode #hud-bottom { bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
+  .live-mode #item-name { bottom: calc(var(--hud-slot) * 2.2 + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-badge i, .live-line { animation: none; }
+  .live-banner { transition: opacity 0.2s; }
+}
+
+/* Écran d'explication du menu */
+#screen-live .lead { color: var(--ink); font-size: 17px; line-height: 1.45; }
+#screen-live ol { margin: 12px 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; line-height: 1.4; }
+#screen-live code { font-family: var(--font-mono); font-size: 19px; color: var(--accent); background: rgba(0, 0, 0, 0.45); padding: 0 4px; overflow-wrap: anywhere; }
